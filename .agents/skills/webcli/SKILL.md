@@ -1,6 +1,6 @@
 ---
 name: webcli
-description: Browse the web, scrape pages, fill forms, click buttons, and take screenshots using the webcli headless browser. Use when the user asks to visit a website, gather information from a web page, interact with a web app, log into a site, or take a screenshot.
+description: Browse the web, read page content, click buttons, fill forms, and take screenshots using the webcli headless browser. Use when the user asks to visit a website, gather information from a web page, or interact with a web app.
 allowed-tools: Bash(webcli *)
 ---
 
@@ -10,15 +10,13 @@ You have access to a headless browser via the `webcli` command. Use it to naviga
 
 ## Prerequisites
 
-Install webcli globally before using this skill:
 ```bash
 npm install -g @erdinccurebal/webcli
 npx playwright install chromium
 ```
 
-## Architecture
-
-webcli runs a background daemon that keeps a real Chromium browser open. Commands are instant — no browser startup overhead. The daemon auto-starts on the first command and shuts down after 5 minutes of inactivity.
+Homepage: https://erdinccurebal.github.io/webcli/
+Repository: https://github.com/erdinccurebal/webcli
 
 ## Commands Reference
 
@@ -39,7 +37,6 @@ webcli links                       # List all links (text + href)
 webcli forms                       # List all forms with their inputs
 webcli html <selector>             # Get innerHTML of element
 webcli attr <selector> <attribute> # Get element attribute value
-webcli eval <js>                   # Execute JavaScript, return result
 ```
 
 ### Interaction
@@ -66,15 +63,10 @@ webcli screenshot                  # Take screenshot (returns path)
 webcli screenshot -o page.png      # Save to specific file
 ```
 
-### Cookies & Browser
+### Browser Settings
 ```bash
-webcli cookie export               # Export cookies as JSON
-webcli cookie import <file>        # Import cookies from JSON file
 webcli viewport 1920 1080          # Change viewport size
 webcli useragent "<string>"        # Change user agent
-webcli network on                  # Enable network request logging
-webcli network off                 # Disable network logging
-webcli network                     # Show captured network logs
 ```
 
 ### Tab & Daemon Management
@@ -113,24 +105,6 @@ webcli go https://site-a.com -t research
 webcli go https://site-b.com -t reference
 webcli source -t research          # Read from specific tab
 webcli source -t reference
-```
-
-### Handling bot-protected sites
-If a site blocks the headless browser, the user should set headed mode in `~/.webcli/config.json`:
-```json
-{
-  "headless": false,
-  "userDataDir": "~/.webcli/browser-data"
-}
-```
-
-### Debugging page issues
-```bash
-webcli forms                       # See available form fields
-webcli links                       # See all clickable links
-webcli eval "document.title"       # Run JS to inspect the page
-webcli html "body"                 # Get raw HTML of an element
-webcli network on                  # Monitor network requests
 ```
 
 ### Error recovery
