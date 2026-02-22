@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>browsercli - Headless Browser CLI</title>
+  <meta name="description" content="Navigate, scrape, and interact with web pages from the terminal. Built on Playwright.">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --purple: #bc8cff;
+      --orange: #d29922;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+    .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+    .badges img { height: 20px; }
+
+    /* Install box */
+    .install {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 24px;
+      display: inline-block;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 1rem;
+      color: var(--green);
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .install:hover { border-color: var(--accent); }
+    .install .dollar { color: var(--muted); user-select: none; }
+    .install .copy {
+      color: var(--muted);
+      font-size: 0.75rem;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* Terminal demo */
+    .terminal-section { padding: 60px 0; }
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .terminal-bar {
+      background: #1c2128;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .terminal-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .terminal-dot.red { background: #ff5f57; }
+    .terminal-dot.yellow { background: #febc2e; }
+    .terminal-dot.green { background: #28c840; }
+    .terminal-bar span {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-left: 8px;
+    }
+    .terminal-body {
+      padding: 24px;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+    .terminal-body .prompt { color: var(--accent); }
+    .terminal-body .cmd { color: var(--text); }
+    .terminal-body .out { color: var(--muted); }
+    .terminal-body .ok { color: var(--green); }
+
+    /* Features */
+    .features { padding: 60px 0; }
+    .features h2 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 40px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover { border-color: var(--accent); }
+    .feature-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feature-card p { color: var(--muted); font-size: 0.9rem; }
+
+    /* Commands */
+    .commands { padding: 60px 0; }
+    .commands h2 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 40px;
+    }
+    .cmd-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .cmd-group h3 {
+      color: var(--accent);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+    .cmd-group ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .cmd-group li {
+      font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .cmd-group li code {
+      color: var(--text);
+      background: var(--surface);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* CTA */
+    .cta {
+      text-align: center;
+      padding: 60px 0 80px;
+    }
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 2rem; }
+      .hero p { font-size: 1rem; }
+      .install { font-size: 0.85rem; padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <section class="hero">
+      <h1><span>browser</span>cli</h1>
+      <p>Navigate, scrape, and interact with web pages from the terminal. Built on Playwright.</p>
+      <div class="badges">
+        <img src="https://img.shields.io/npm/v/browsercli?color=58a6ff&style=flat-square" alt="npm version">
+        <img src="https://img.shields.io/node/v/browsercli?color=3fb950&style=flat-square" alt="node version">
+        <img src="https://img.shields.io/github/license/erdinccurebal/browsercli?color=bc8cff&style=flat-square" alt="license">
+      </div>
+      <div class="install" onclick="navigator.clipboard.writeText('npm install -g browsercli')">
+        <span class="dollar">$ </span>npm install -g browsercli
+        <span class="copy">click to copy</span>
+      </div>
+    </section>
+
+    <section class="terminal-section">
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="terminal-dot red"></div>
+          <div class="terminal-dot yellow"></div>
+          <div class="terminal-dot green"></div>
+          <span>Terminal</span>
+        </div>
+        <div class="terminal-body">
+          <span class="prompt">$</span> <span class="cmd">browsercli go https://example.com</span><br>
+          <span class="ok">Navigated to https://example.com (tab: default)</span><br><br>
+          <span class="prompt">$</span> <span class="cmd">browsercli source</span><br>
+          <span class="out">[Page: https://example.com]</span><br>
+          <span class="out">Example Domain</span><br>
+          <span class="out">This domain is for use in illustrative examples...</span><br><br>
+          <span class="prompt">$</span> <span class="cmd">browsercli click "More information..."</span><br>
+          <span class="ok">Clicked "More information..." &rarr; https://www.iana.org/help/example-domains</span><br><br>
+          <span class="prompt">$</span> <span class="cmd">browsercli screenshot -o page.png</span><br>
+          <span class="ok">Screenshot saved: page.png</span><br><br>
+          <span class="prompt">$</span> <span class="cmd">browsercli stop</span><br>
+          <span class="ok">Daemon stopped</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <h2>Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>30+ Commands</h3>
+          <p>Navigate, read content, fill forms, click buttons, take screenshots, manage cookies, and more.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Persistent Daemon</h3>
+          <p>Browser stays open between commands. No startup overhead. Auto-shuts down after idle timeout.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Multi-Tab</h3>
+          <p>Manage multiple named browser tabs simultaneously with the <code>-t</code> flag.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Anti-Detection</h3>
+          <p>Realistic user-agent, webdriver flag removal, configurable viewport. Works on bot-protected sites.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Session Persistence</h3>
+          <p>Cookies and localStorage persist across restarts with configurable user data directory.</p>
+        </div>
+        <div class="feature-card">
+          <h3>JSON Output</h3>
+          <p>Every command supports <code>--json</code> flag for structured, machine-readable output.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="commands">
+      <h2>Commands</h2>
+      <div class="cmd-grid">
+        <div class="cmd-group">
+          <h3>Navigation</h3>
+          <ul>
+            <li><code>go</code> Navigate to URL</li>
+            <li><code>back</code> Go back</li>
+            <li><code>forward</code> Go forward</li>
+            <li><code>reload</code> Reload page</li>
+          </ul>
+        </div>
+        <div class="cmd-group">
+          <h3>Reading</h3>
+          <ul>
+            <li><code>source</code> Page text content</li>
+            <li><code>html</code> Element innerHTML</li>
+            <li><code>attr</code> Element attribute</li>
+            <li><code>links</code> List all links</li>
+            <li><code>forms</code> List all forms</li>
+            <li><code>eval</code> Run JavaScript</li>
+          </ul>
+        </div>
+        <div class="cmd-group">
+          <h3>Interaction</h3>
+          <ul>
+            <li><code>click</code> Click by text</li>
+            <li><code>clicksel</code> Click by selector</li>
+            <li><code>fill</code> Fill input field</li>
+            <li><code>select</code> Select dropdown</li>
+            <li><code>type</code> Type with keyboard</li>
+            <li><code>press</code> Press key</li>
+            <li><code>focus</code> Focus element</li>
+          </ul>
+        </div>
+        <div class="cmd-group">
+          <h3>Waiting</h3>
+          <ul>
+            <li><code>wait</code> Wait for selector</li>
+            <li><code>waitfor</code> Wait for text</li>
+            <li><code>sleep</code> Sleep N ms</li>
+          </ul>
+        </div>
+        <div class="cmd-group">
+          <h3>Browser</h3>
+          <ul>
+            <li><code>screenshot</code> Capture page</li>
+            <li><code>cookie</code> Export/import cookies</li>
+            <li><code>viewport</code> Change viewport</li>
+            <li><code>useragent</code> Change UA</li>
+            <li><code>network</code> Request logging</li>
+          </ul>
+        </div>
+        <div class="cmd-group">
+          <h3>Management</h3>
+          <ul>
+            <li><code>tabs</code> List open tabs</li>
+            <li><code>quit</code> Close a tab</li>
+            <li><code>status</code> Daemon info</li>
+            <li><code>stop</code> Stop daemon</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="cta-buttons">
+        <a href="https://github.com/erdinccurebal/browsercli" class="btn btn-primary">
+          GitHub
+        </a>
+        <a href="https://www.npmjs.com/package/browsercli" class="btn btn-secondary">
+          npm
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="container">
+      MIT License &middot; <a href="https://github.com/erdinccurebal/browsercli">erdinccurebal/browsercli</a>
+    </div>
+  </footer>
+
+</body>
+</html>
