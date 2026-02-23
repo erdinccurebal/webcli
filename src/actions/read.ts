@@ -95,3 +95,91 @@ export async function attr(
   const value = await element.getAttribute(attribute);
   return { url: page.url(), selector, attribute, value };
 }
+
+export async function title(page: Page): Promise<{ title: string }> {
+  return { title: await page.title() };
+}
+
+export async function url(page: Page): Promise<{ url: string }> {
+  return { url: page.url() };
+}
+
+export async function value(
+  page: Page,
+  selector: string,
+): Promise<{ selector: string; value: string }> {
+  const val = await page.inputValue(selector);
+  return { selector, value: val };
+}
+
+export async function count(
+  page: Page,
+  selector: string,
+): Promise<{ selector: string; count: number }> {
+  const elements = await page.$$(selector);
+  return { selector, count: elements.length };
+}
+
+export async function box(
+  page: Page,
+  selector: string,
+): Promise<{ selector: string; box: { x: number; y: number; width: number; height: number } | null }> {
+  const element = await page.$(selector);
+  if (!element) throw new Error(`Element not found: ${selector}`);
+  const bb = await element.boundingBox();
+  return { selector, box: bb };
+}
+
+export async function styles(
+  page: Page,
+  selector: string,
+  props?: string[],
+): Promise<{ selector: string; styles: Record<string, string> }> {
+  const result = await page.$eval(
+    selector,
+    (el, propList) => {
+      const computed = window.getComputedStyle(el);
+      const out: Record<string, string> = {};
+      if (propList && propList.length > 0) {
+        for (const p of propList) {
+          out[p] = computed.getPropertyValue(p);
+        }
+      } else {
+        for (let i = 0; i < computed.length; i++) {
+          const name = computed[i];
+          out[name] = computed.getPropertyValue(name);
+        }
+      }
+      return out;
+    },
+    props || [],
+  );
+  return { selector, styles: result };
+}
+
+export async function visible(
+  page: Page,
+  selector: string,
+): Promise<{ selector: string; visible: boolean }> {
+  const element = page.locator(selector);
+  const isVisible = await element.isVisible();
+  return { selector, visible: isVisible };
+}
+
+export async function enabled(
+  page: Page,
+  selector: string,
+): Promise<{ selector: string; enabled: boolean }> {
+  const element = page.locator(selector);
+  const isEnabled = await element.isEnabled();
+  return { selector, enabled: isEnabled };
+}
+
+export async function checked(
+  page: Page,
+  selector: string,
+): Promise<{ selector: string; checked: boolean }> {
+  const element = page.locator(selector);
+  const isChecked = await element.isChecked();
+  return { selector, checked: isChecked };
+}
