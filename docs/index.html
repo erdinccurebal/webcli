@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>webcli - Headless Browser CLI</title>
-  <meta name="description" content="Navigate, scrape, and interact with web pages from the terminal. Built on Playwright.">
+  <meta name="description" content="55+ commands to navigate, scrape, snapshot, and interact with web pages from the terminal. Built on Playwright.">
   <style>
     :root {
       --bg: #0d1117;
@@ -111,6 +111,7 @@
     .terminal-body .cmd { color: var(--text); }
     .terminal-body .out { color: var(--muted); }
     .terminal-body .ok { color: var(--green); }
+    .terminal-body .ref { color: var(--purple); }
 
     /* Features */
     .features { padding: 60px 0; }
@@ -228,11 +229,11 @@
   <div class="container">
     <section class="hero">
       <h1><span>web</span>cli</h1>
-      <p>Navigate, scrape, and interact with web pages from the terminal. Built on Playwright.</p>
+      <p>55+ commands to navigate, snapshot, and interact with web pages from the terminal. Built on Playwright.</p>
       <div class="badges">
+        <img src="https://img.shields.io/npm/v/@erdinccurebal/webcli?color=58a6ff&style=flat-square" alt="npm version">
         <img src="https://img.shields.io/github/license/erdinccurebal/webcli?color=bc8cff&style=flat-square" alt="license">
         <img src="https://img.shields.io/badge/node-%3E%3D22-3fb950?style=flat-square" alt="node version">
-        <img src="https://img.shields.io/badge/version-0.1.0-58a6ff?style=flat-square" alt="version">
       </div>
       <div class="install" onclick="navigator.clipboard.writeText('npm install -g @erdinccurebal/webcli').then(()=>{this.querySelector('.copy').textContent='copied!'})">
         <span class="dollar">$ </span>npm install -g @erdinccurebal/webcli<span class="copy">copy</span>
@@ -250,16 +251,19 @@
         <div class="terminal-body">
           <span class="prompt">$</span> <span class="cmd">webcli go https://example.com</span><br>
           <span class="ok">Navigated to https://example.com (tab: default)</span><br><br>
-          <span class="prompt">$</span> <span class="cmd">webcli source</span><br>
-          <span class="out">[Page: https://example.com]</span><br>
-          <span class="out">Example Domain</span><br>
-          <span class="out">This domain is for use in illustrative examples...</span><br><br>
-          <span class="prompt">$</span> <span class="cmd">webcli click "More information..."</span><br>
-          <span class="ok">Clicked "More information..." &rarr; https://www.iana.org/help/example-domains</span><br><br>
-          <span class="prompt">$</span> <span class="cmd">webcli screenshot -o page.png</span><br>
-          <span class="ok">Screenshot saved: page.png</span><br><br>
-          <span class="prompt">$</span> <span class="cmd">webcli stop</span><br>
-          <span class="ok">Daemon stopped</span>
+          <span class="prompt">$</span> <span class="cmd">webcli snapshot</span><br>
+          <span class="out">[document]</span><br>
+          <span class="out">&nbsp;&nbsp;[heading] "Example Domain"</span><br>
+          <span class="out">&nbsp;&nbsp;[link <span class="ref">@e1</span>] "More information..."</span><br>
+          <span class="out">(1 interactive refs)</span><br><br>
+          <span class="prompt">$</span> <span class="cmd">webcli click <span class="ref">@e1</span></span><br>
+          <span class="ok">Clicked "@e1" &rarr; https://www.iana.org/help/example-domains</span><br><br>
+          <span class="prompt">$</span> <span class="cmd">webcli title</span><br>
+          <span class="ok">IANA &mdash; Example Domains</span><br><br>
+          <span class="prompt">$</span> <span class="cmd">webcli screenshot --annotate -o page.png</span><br>
+          <span class="ok">Annotated screenshot saved: page.png (12 elements)</span><br><br>
+          <span class="prompt">$</span> <span class="cmd">webcli state save session.json</span><br>
+          <span class="ok">State saved: session.json</span>
         </div>
       </div>
     </section>
@@ -268,8 +272,12 @@
       <h2>Features</h2>
       <div class="features-grid">
         <div class="feature-card">
-          <h3>30+ Commands</h3>
-          <p>Navigate, read content, fill forms, click buttons, take screenshots, manage cookies, and more.</p>
+          <h3>55+ Commands</h3>
+          <p>Navigate, read, interact, snapshot, screenshot, PDF, console, storage, state management, device emulation, and more.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Accessibility Snapshot</h3>
+          <p>Get the page's accessibility tree with deterministic refs (<code>@e1</code>, <code>@e2</code>) for reliable element targeting.</p>
         </div>
         <div class="feature-card">
           <h3>Persistent Daemon</h3>
@@ -284,12 +292,20 @@
           <p>Realistic user-agent, webdriver flag removal, configurable viewport. Works on bot-protected sites.</p>
         </div>
         <div class="feature-card">
-          <h3>Session Persistence</h3>
-          <p>Cookies and localStorage persist across restarts with configurable user data directory.</p>
+          <h3>State Management</h3>
+          <p>Save and restore full browser state — cookies, localStorage, and sessionStorage — as JSON.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Device Emulation</h3>
+          <p>Emulate any device — iPhone, iPad, Pixel, and more — with accurate viewport and user-agent.</p>
         </div>
         <div class="feature-card">
           <h3>JSON Output</h3>
           <p>Every command supports <code>--json</code> flag for structured, machine-readable output.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Agent Skill</h3>
+          <p>Works as a skill for Claude Code, Cursor, Copilot, Codex, Windsurf and 30+ other AI agents.</p>
         </div>
       </div>
     </section>
@@ -315,18 +331,41 @@
             <li><code>links</code> List all links</li>
             <li><code>forms</code> List all forms</li>
             <li><code>eval</code> Run JavaScript</li>
+            <li><code>title</code> Page title</li>
+            <li><code>url</code> Current URL</li>
+            <li><code>value</code> Input value</li>
+            <li><code>count</code> Element count</li>
+            <li><code>box</code> Bounding box</li>
+            <li><code>styles</code> CSS styles</li>
+            <li><code>visible</code> Is visible?</li>
+            <li><code>enabled</code> Is enabled?</li>
+            <li><code>checked</code> Is checked?</li>
           </ul>
         </div>
         <div class="cmd-group">
           <h3>Interaction</h3>
           <ul>
-            <li><code>click</code> Click by text</li>
+            <li><code>click</code> Click by text/ref</li>
             <li><code>clicksel</code> Click by selector</li>
+            <li><code>dblclick</code> Double-click</li>
+            <li><code>hover</code> Hover element</li>
             <li><code>fill</code> Fill input field</li>
             <li><code>select</code> Select dropdown</li>
             <li><code>type</code> Type with keyboard</li>
             <li><code>press</code> Press key</li>
             <li><code>focus</code> Focus element</li>
+            <li><code>check</code> Check checkbox</li>
+            <li><code>uncheck</code> Uncheck checkbox</li>
+            <li><code>drag</code> Drag and drop</li>
+            <li><code>upload</code> Upload file</li>
+            <li><code>scroll</code> Scroll page</li>
+          </ul>
+        </div>
+        <div class="cmd-group">
+          <h3>Snapshot</h3>
+          <ul>
+            <li><code>snapshot</code> Accessibility tree</li>
+            <li>Refs: <code>@e1</code> <code>@e2</code> ...</li>
           </ul>
         </div>
         <div class="cmd-group">
@@ -338,18 +377,33 @@
           </ul>
         </div>
         <div class="cmd-group">
-          <h3>Browser</h3>
+          <h3>Capture</h3>
           <ul>
             <li><code>screenshot</code> Capture page</li>
-            <li><code>cookie</code> Export/import cookies</li>
+            <li><code>screenshot --annotate</code> Annotated</li>
+            <li><code>pdf</code> Export as PDF</li>
+          </ul>
+        </div>
+        <div class="cmd-group">
+          <h3>Browser</h3>
+          <ul>
+            <li><code>console</code> Console messages</li>
+            <li><code>errors</code> Page errors</li>
+            <li><code>dialog</code> Handle dialogs</li>
+            <li><code>frame</code> Switch iframe</li>
+            <li><code>storage</code> localStorage</li>
+            <li><code>cookie</code> Cookie mgmt</li>
             <li><code>viewport</code> Change viewport</li>
             <li><code>useragent</code> Change UA</li>
+            <li><code>device</code> Emulate device</li>
             <li><code>network</code> Request logging</li>
           </ul>
         </div>
         <div class="cmd-group">
-          <h3>Management</h3>
+          <h3>State & Tabs</h3>
           <ul>
+            <li><code>state save</code> Save state</li>
+            <li><code>state load</code> Load state</li>
             <li><code>tabs</code> List open tabs</li>
             <li><code>quit</code> Close a tab</li>
             <li><code>status</code> Daemon info</li>
