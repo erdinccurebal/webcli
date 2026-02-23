@@ -20,11 +20,13 @@ Built for [Claude Code](https://claude.com/claude-code) and similar AI-powered d
 
 ## Features
 
-- **30+ commands** — navigate, read page content, interact with elements, take screenshots
+- **55+ commands** — navigate, read, interact, snapshot, screenshot, PDF, console, storage, state management
+- **Accessibility snapshot** — get the page's accessibility tree with deterministic refs (`@e1`, `@e2`...) for reliable element targeting
 - **Persistent daemon** — browser stays open between commands, no startup overhead
 - **Multi-tab** — manage multiple named browser tabs simultaneously
 - **Anti-detection** — realistic user-agent, webdriver flag removal, configurable viewport
-- **Session persistence** — cookies and localStorage persist across daemon restarts
+- **Session persistence** — save/load full browser state (cookies, localStorage, sessionStorage)
+- **Device emulation** — emulate mobile devices (iPhone, iPad, Pixel, etc.)
 - **JSON output** — structured output for programmatic consumption
 - **Headed/headless** — toggle via config for sites with bot detection
 - **Agent skill** — works as a skill for Claude Code, Cursor, Copilot, Codex, Windsurf and 30+ other agents
@@ -57,6 +59,8 @@ webcli go https://example.com          # Navigate (auto-starts daemon)
 webcli source                           # Read page text
 webcli links                            # List all links
 webcli click "More information..."      # Click by visible text
+webcli snapshot                         # Get accessibility tree with refs
+webcli click @e1                        # Click using snapshot ref
 webcli screenshot -o page.png           # Take screenshot
 webcli stop                             # Stop daemon
 ```
@@ -84,6 +88,15 @@ Options for `go`: `-w, --wait <strategy>` — `domcontentloaded` (default), `net
 | `webcli links` | List all links (text + href) |
 | `webcli forms` | List all forms with their inputs |
 | `webcli eval <js>` | Execute JavaScript and return result |
+| `webcli title` | Get the page title |
+| `webcli url` | Get the current URL |
+| `webcli value <selector>` | Get the value of an input/textarea |
+| `webcli count <selector>` | Count elements matching a selector |
+| `webcli box <selector>` | Get element bounding box (x, y, width, height) |
+| `webcli styles <selector> [props...]` | Get computed CSS styles |
+| `webcli visible <selector>` | Check if element is visible (bool) |
+| `webcli enabled <selector>` | Check if element is enabled (bool) |
+| `webcli checked <selector>` | Check if checkbox is checked (bool) |
 
 ### Interaction
 
@@ -91,11 +104,37 @@ Options for `go`: `-w, --wait <strategy>` — `domcontentloaded` (default), `net
 |---------|-------------|
 | `webcli click <text>` | Click element by visible text |
 | `webcli clicksel <selector>` | Click element by CSS selector |
+| `webcli dblclick <text>` | Double-click element by visible text |
+| `webcli hover <selector>` | Hover over an element |
 | `webcli focus <selector>` | Focus element by CSS selector |
 | `webcli type <text>` | Type text with keyboard |
 | `webcli fill <selector> <value>` | Fill an input field |
 | `webcli select <selector> <value>` | Select a dropdown option |
 | `webcli press <key>` | Press a keyboard key (Enter, Tab, Escape...) |
+| `webcli check <selector>` | Check a checkbox |
+| `webcli uncheck <selector>` | Uncheck a checkbox |
+| `webcli drag <from> <to>` | Drag and drop between two selectors |
+| `webcli upload <selector> <file>` | Upload a file to an input element |
+| `webcli scroll <direction> [amount]` | Scroll the page (up/down/left/right) |
+
+All interaction commands support snapshot refs: `webcli click @e1`, `webcli fill @e3 "value"`
+
+### Accessibility Snapshot
+
+| Command | Description |
+|---------|-------------|
+| `webcli snapshot` | Get accessibility tree with interactive element refs |
+| `webcli snapshot --all` | Include non-interactive elements |
+| `webcli snapshot --max-depth <n>` | Limit tree depth |
+
+The snapshot assigns deterministic refs (`@e1`, `@e2`, ...) to interactive elements. Use these refs in other commands for reliable element targeting:
+
+```bash
+webcli snapshot                    # Get tree with refs
+webcli click @e1                   # Click using ref
+webcli fill @e3 "hello"            # Fill input using ref
+webcli hover @e5                   # Hover using ref
+```
 
 ### Waiting
 
@@ -105,6 +144,55 @@ Options for `go`: `-w, --wait <strategy>` — `domcontentloaded` (default), `net
 | `webcli waitfor <text>` | Wait for text to appear on page |
 | `webcli sleep <ms>` | Sleep for specified milliseconds |
 
+### Screenshots & PDF
+
+| Command | Description |
+|---------|-------------|
+| `webcli screenshot` | Take a full-page screenshot |
+| `webcli screenshot --no-full` | Viewport-only screenshot |
+| `webcli screenshot --annotate` | Screenshot with numbered interactive elements |
+| `webcli pdf` | Save page as PDF |
+
+Options: `-o, --output <file>` for custom output path.
+
+### Console & Errors
+
+| Command | Description |
+|---------|-------------|
+| `webcli console on` | Start capturing console messages |
+| `webcli console off` | Stop capturing |
+| `webcli console` | Show captured console messages |
+| `webcli errors` | Show page errors |
+
+### Dialog Handling
+
+| Command | Description |
+|---------|-------------|
+| `webcli dialog accept [text]` | Accept a browser dialog (alert/confirm/prompt) |
+| `webcli dialog dismiss` | Dismiss a browser dialog |
+
+### Frame (iframe) Switching
+
+| Command | Description |
+|---------|-------------|
+| `webcli frame <selector>` | Switch to an iframe |
+| `webcli frame main` | Switch back to main frame |
+
+### Storage (localStorage)
+
+| Command | Description |
+|---------|-------------|
+| `webcli storage get [key]` | Get localStorage value(s) |
+| `webcli storage set <key> <value>` | Set a localStorage value |
+| `webcli storage clear` | Clear all localStorage |
+
+### State Management
+
+| Command | Description |
+|---------|-------------|
+| `webcli state save [file]` | Save full browser state (cookies + storage) to JSON |
+| `webcli state load <file>` | Load browser state from JSON |
+
 ### Cookies & Browser
 
 | Command | Description |
@@ -113,8 +201,8 @@ Options for `go`: `-w, --wait <strategy>` — `domcontentloaded` (default), `net
 | `webcli cookie import <file>` | Import cookies from JSON file |
 | `webcli viewport <width> <height>` | Change viewport size |
 | `webcli useragent <string>` | Change user agent |
+| `webcli device <name>` | Emulate a device (e.g. "iPhone 14", "iPad Pro 11") |
 | `webcli network [on\|off]` | Toggle request/response logging |
-| `webcli screenshot` | Take a full-page screenshot |
 
 ### Tab & Daemon Management
 
@@ -146,6 +234,10 @@ Create `~/.webcli/config.json`:
   "viewport": { "width": 1280, "height": 800 },
   "locale": "en-US",
   "timezoneId": "America/New_York",
+  "geolocation": { "latitude": 40.7128, "longitude": -74.0060 },
+  "colorScheme": "dark",
+  "offline": false,
+  "extraHeaders": { "X-Custom": "value" },
   "waitAfterClick": 500,
   "waitAfterPress": 300,
   "idleTimeout": 300000,
@@ -159,20 +251,21 @@ Set `"headless": false` to use headed mode (required for sites with aggressive b
 
 ```
 CLI Client (webcli)
-    │
-    │── Unix Socket (~/.webcli/daemon.sock)
-    │
-    ▼
+    |
+    |-- Unix Socket (~/.webcli/daemon.sock)
+    |
+    v
 Daemon (background process)
-    │
-    ├── Playwright Browser (Chromium/Firefox/WebKit)
-    │   ├── Tab: "default" → Page
-    │   ├── Tab: "search"  → Page
-    │   └── Tab: "login"   → Page
-    │
-    ├── Tab Manager (named page instances)
-    ├── Handler Registry (action dispatch)
-    └── Auto-shutdown after 5min idle
+    |
+    |-- Playwright Browser (Chromium/Firefox/WebKit)
+    |   |-- Tab: "default" -> Page
+    |   |-- Tab: "search"  -> Page
+    |   +-- Tab: "login"   -> Page
+    |
+    |-- Tab Manager (named page instances)
+    |-- Handler Registry (action dispatch)
+    |-- Ref Store (snapshot @e1 refs -> ElementHandle)
+    +-- Auto-shutdown after 5min idle
 ```
 
 The daemon starts automatically on the first command and persists in the background. All commands communicate via a Unix domain socket using newline-delimited JSON.

@@ -37,6 +37,7 @@ src/
 ├── config.ts               # Configuration loading
 ├── validate.ts             # Input validation helpers
 ├── handler-registry.ts     # Action handler dispatch
+├── ref-store.ts            # Snapshot ref (@e1) -> ElementHandle mapping
 ├── commands/               # CLI command definitions (one per file)
 │   ├── shared.ts           # Shared CLI helpers (globalOpts, output)
 │   ├── index.ts            # Registers all commands
@@ -45,12 +46,19 @@ src/
 │   └── index.ts            # All daemon action handlers
 └── actions/                # Playwright action implementations
     ├── navigate.ts         # go, back, forward, reload
-    ├── read.ts             # source, links, forms, eval, html, attr
-    ├── interact.ts         # click, clicksel, focus, type, fill, select, press
+    ├── read.ts             # source, links, forms, eval, html, attr, title, url, value, count, box, styles, visible, enabled, checked
+    ├── interact.ts         # click, clicksel, dblclick, hover, focus, type, fill, select, press, check, uncheck, drag, upload, scroll
+    ├── snapshot.ts         # accessibility tree snapshot with ref assignment
     ├── wait.ts             # waitForSelector, waitForText
-    ├── screenshot.ts       # screenshot capture
+    ├── screenshot.ts       # screenshot capture (full, viewport, annotated)
+    ├── pdf.ts              # PDF export
+    ├── console.ts          # console message + page error tracking
+    ├── dialog.ts           # browser dialog handling (alert/confirm/prompt)
+    ├── frame.ts            # iframe switching
+    ├── storage.ts          # localStorage operations
+    ├── state.ts            # full state save/load (cookies + storage)
     ├── cookie.ts           # cookie export/import
-    ├── browser.ts          # viewport, user agent
+    ├── browser.ts          # viewport, user agent, device emulation
     └── network.ts          # request/response logging
 ```
 
@@ -97,9 +105,12 @@ export function register(program: Command): void {
 **4. Register** (`src/commands/index.ts`):
 ```typescript
 import { register as title } from "./title.js";
-// ... in registerAll():
-title(program);
+// add to commands array
 ```
+
+## Ref System
+
+The snapshot command assigns `@e1`, `@e2`, ... refs to interactive elements. These refs are stored in `src/ref-store.ts` as a `WeakMap<Page, Map<string, ElementHandle>>`. Interaction commands (click, fill, hover, etc.) check if the selector starts with `@e` and resolve it from the ref store.
 
 ## Code Style
 
